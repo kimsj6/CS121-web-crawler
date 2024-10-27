@@ -1,6 +1,8 @@
 import re
+import Tokenizer as Token
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from simhash import Simhash
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -18,7 +20,8 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
-    #print(links)
+    print(Token.tokenize(soup.get_text()))
+    #print(Simhash(soup.get_text().split()).value)
     return links
 
 def is_valid(url):
@@ -28,11 +31,11 @@ def is_valid(url):
     try:
         allowed_domains = ["ics.uci.edu","cs.uci.edu","informatics.uci.edu","stat.uci.edu"]
         allowed_specific_domain = "today.uci.edu"
-        allowed_specific_path = "today.uci.edu/department/information_computer_sciences"
+        allowed_specific_path = "/department/information_computer_sciences"
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        if parsed.netloc == allowed_specific_domain and not parsed_url.path.startswith(allowed_specific_path):
+        if parsed.netloc == allowed_specific_domain and not parsed.path.startswith(allowed_specific_path):
             return False
         if not any(parsed.netloc.endswith(domain) for domain in allowed_domains):
             return False
