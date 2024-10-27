@@ -18,6 +18,7 @@ class Crawler(object):
             worker.start()
 
     def start(self):
+        print(here)
         self.start_async()
         self.join()
 
