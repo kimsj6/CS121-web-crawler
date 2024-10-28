@@ -12,15 +12,9 @@ def tokenize(text: str) -> list:
 
 	tokens = []
 
-
 	current_token = ""
-	while True:
-		char = file.read(1)
-		if not char:
-			if current_token:
-				tokens.append(current_token)
-			break
-
+	
+	for char in text:
 		if char in allowed_characters:
 			current_token += char
 		elif char in uppercase_dict:
@@ -29,9 +23,12 @@ def tokenize(text: str) -> list:
 			if current_token:
 				tokens.append(current_token)
 				current_token = ""
+    
+	if current_token:
+		tokens.append(current_token)
+	
 	return tokens
 					
-
 
 def compute_word_frequencies(tokens: list) -> dict:
 	"""

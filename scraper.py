@@ -18,10 +18,26 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+    if resp.raw_response is None:
+        return []
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
-    print(Token.tokenize(soup.get_text()))
-    #print(Simhash(soup.get_text().split()).value)
+    tokens = Token.tokenize(soup.get_text())
+    fingerprint = Simhash(tokens).value
+    try:
+        with open("fingerprints.txt", "r") as f:
+            for line in f:
+                old_fingerprint = int(line.strip())
+                if bin(fingerprint ^ old_fingerprint).count("1") <= 3:
+                    print("similar contents detected!")
+                    return []
+    except FileNotFoundError:
+        pass
+
+    with open("fingerprints.txt", "a") as f:
+        f.write(f"{fingerprint}\n")
+    
+    #print(Simhash(tokens).value)
     return links
 
 def is_valid(url):
