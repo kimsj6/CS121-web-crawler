@@ -1,6 +1,6 @@
 import re
 import Tokenizer as Token
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 from bs4 import BeautifulSoup
 from simhash import Simhash
 
@@ -18,11 +18,17 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    if resp.raw_response is None:
+    print(url)
+    if resp is None or resp.raw_response is None or resp.status != 200:
+        print("NoneType or Error")
         return []
+    
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
     tokens = Token.tokenize(soup.get_text())
+    if len(tokens) < 10:
+        print("low textual information")
+        return []
+    
     fingerprint = Simhash(tokens).value
     try:
         with open("fingerprints.txt", "r") as f:
@@ -36,9 +42,14 @@ def extract_next_links(url, resp):
 
     with open("fingerprints.txt", "a") as f:
         f.write(f"{fingerprint}\n")
+
+    links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
+    for i in range(len(links)):
+        parsed = urlparse(links[i])
+        links[i] = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, parsed.query, ""))
     
-    #print(Simhash(tokens).value)
     return links
+
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
