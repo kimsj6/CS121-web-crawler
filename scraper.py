@@ -1,6 +1,6 @@
 import re
 import Tokenizer as Token
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, parse_qs
 from bs4 import BeautifulSoup
 from simhash import Simhash
 
@@ -59,14 +59,20 @@ def is_valid(url):
         allowed_domains = ["ics.uci.edu","cs.uci.edu","informatics.uci.edu","stat.uci.edu"]
         allowed_specific_domain = "today.uci.edu"
         allowed_specific_path = "/department/information_computer_sciences"
-        parsed = urlparse(url)
+        try:
+            parsed = urlparse(url)
+        except ValueError:
+            return False
+        
         if parsed.scheme not in set(["http", "https"]):
             return False
         if parsed.netloc == allowed_specific_domain and not parsed.path.startswith(allowed_specific_path):
             return False
         if not any(parsed.netloc.endswith(domain) for domain in allowed_domains):
             return False
-        return not re.match(
+        if "filter" in parsed.query and any("filter" in key for key in parse_qs(parsed.query)):
+            return False
+        return not re.search(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
