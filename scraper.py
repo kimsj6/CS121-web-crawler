@@ -43,6 +43,13 @@ def extract_next_links(url, resp):
     with open("fingerprints.txt", "a") as f:
         f.write(f"{fingerprint}\n")
 
+    freqs = Token.compute_word_frequencies(tokens)
+    top_50_words = sorted(freqs.items(), key=lambda x: x[1], reverse=True)[:50]
+    
+    print("The Top 50 Common Words:")
+    for word, freq in top_50_words:
+        print(f"{word} - {freq}")
+
     links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
     for i in range(len(links)):
         parsed = urlparse(links[i])
