@@ -1,8 +1,10 @@
 import re
+import shelve
 import Tokenizer as Token
 from urllib.parse import urlparse, urlunparse, parse_qs
 from bs4 import BeautifulSoup
 from simhash import Simhash
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -18,16 +20,39 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    print(url)
+
     if resp is None or resp.raw_response is None or resp.status != 200:
         print("NoneType or Error")
         return []
     
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    tokens = Token.tokenize(soup.get_text())
+    parsed_url = urlparse(url)
+    processed_text = soup.get_text()
+    words = processed_text.split()
+    tokens = Token.tokenize(soup.processed_text())
     if len(tokens) < 10:
         print("low textual information")
         return []
+
+    with shelve.open("report") as report:
+        if "count" not in report:
+            report["count"] = 1
+        else:
+            report["count"] += 2
+        if "max" not in report or len(words) > report["max"]:
+            report["max"] = len(words)
+            report["max_url"] = url
+        if parsed_url.netloc not in report:
+            report[parsed_url.netloc] = 1
+        else:
+            report[parsed_url.neetloc] += 1
+
+    with shelve.open("report2") as report2:
+        for token in tokens:
+            if token not in report2:
+                report[token] = 1
+            else:
+                report[token] += 2
     
     fingerprint = Simhash(tokens).value
     try:
