@@ -60,7 +60,9 @@ def compute_word_frequencies(tokens: list) -> dict:
 			frequencies[token] = 1
 	
 	return frequencies
-
+def get_top_50_words(frequencies: dict) -> list:
+	return Counter(frequencies).most_common(50)
+	
 def print_frequencies(frequencies: dict) -> None:
 	"""
 	Runtime Complexity: Runs in linear time (O(n)) relative to the size of the input. The method iterates
@@ -74,3 +76,9 @@ if __name__ == '__main__':
 	tokens = tokenize(sys.argv[1])
 	freqs = compute_word_frequencies(tokens)
 	print_frequencies(freqs)
+	
+top_50_words = get_top_50_words(freqs)
+print("The Top 50 Common Words:")
+for word, freq in top_50_words:
+	print(f"{word} - {freq}")
+
