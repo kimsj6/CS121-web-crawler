@@ -29,30 +29,24 @@ def extract_next_links(url, resp):
     parsed_url = urlparse(url)
     processed_text = soup.get_text()
     words = processed_text.split()
-    tokens = Token.tokenize(soup.processed_text())
-    if len(tokens) < 10:
-        print("low textual information")
-        return []
+    tokens = Token.tokenize(processed_text)
 
     with shelve.open("report") as report:
         if "count" not in report:
             report["count"] = 1
         else:
-            report["count"] += 2
+            report["count"] += 1
         if "max" not in report or len(words) > report["max"]:
             report["max"] = len(words)
             report["max_url"] = url
         if parsed_url.netloc not in report:
             report[parsed_url.netloc] = 1
         else:
-            report[parsed_url.neetloc] += 1
-
-    with shelve.open("report2") as report2:
-        for token in tokens:
-            if token not in report2:
-                report[token] = 1
-            else:
-                report[token] += 2
+            report[parsed_url.netloc] += 1
+    
+    if len(tokens) < 10:
+        print("low textual information")
+        return []
     
     fingerprint = Simhash(tokens).value
     try:
@@ -68,12 +62,12 @@ def extract_next_links(url, resp):
     with open("fingerprints.txt", "a") as f:
         f.write(f"{fingerprint}\n")
 
-    freqs = Token.compute_word_frequencies(tokens)
-    top_50_words = sorted(freqs.items(), key=lambda x: x[1], reverse=True)[:50]
-    
-    print("The Top 50 Common Words:")
-    for word, freq in top_50_words:
-        print(f"{word} - {freq}")
+    with shelve.open("report2") as report2:
+        for token in tokens:
+            if token not in report2:
+                report2[token] = 1
+            else:
+                report2[token] += 1
 
     links = [link.get('href') for link in soup.find_all('a') if link.get('href') and is_valid(link.get('href'))]
     for i in range(len(links)):

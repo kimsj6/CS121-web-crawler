@@ -33,11 +33,11 @@ def tokenize(text: str) -> list:
 		elif char in uppercase_dict:
 			current_token += uppercase_dict[char]
 		else:
-			if current_token and len(current_token) < 3 and current_token not in stop_words_list:
+			if current_token and len(current_token) > 3 and current_token not in stop_words_list:
 				tokens.append(current_token)
 			current_token = ""
     
-	if current_token and len(current_token) < 3 and current_token not in stop_words_list:
+	if current_token and len(current_token) > 3 and current_token not in stop_words_list:
 		tokens.append(current_token)
 	
 	return tokens
